@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniFresh Adventure 🍉 - Shop Update</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --green: #27AE60; --green-light: #2ECC71; --green-dark: #1E8449;
+            --orange: #E67E22; --orange-light: #F39C12; --yellow: #F1C40F;
+            --red: #E74C3C; --blue: #3498DB; --purple: #8E44AD;
+            --white: #FFFFFF; --bg: #F0FBF4; --text: #1A3A2A; --shadow: rgba(39,174,96,0.18);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; min-height:100vh; }
+
+        /* Floating Background */
+        .bg-fruits { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
+        .bg-fruit { position:absolute; font-size:2rem; opacity:0.07; animation:floatUp linear infinite; }
+        @keyframes floatUp { 0%{transform:translateY(110vh) rotate(0deg);} 100%{transform:translateY(-15vh) rotate(360deg);} }
+
+        .screen { display:none; position:relative; z-index:1; min-height:100vh; padding:20px; flex-direction:column; align-items:center; justify-content:center; }
+        .screen.active { display:flex; animation:fadeIn 0.4s ease; }
+        @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+        /* Navigation & Header */
+        .back-btn { position:fixed; top:20px; left:20px; padding:10px 15px; border-radius:20px; border:none; cursor:pointer; background:white; font-weight:700; box-shadow:0 4px 10px var(--shadow); z-index:10; }
+        .points-bar { background:var(--green-light); color:white; padding:12px 25px; border-radius:50px; font-weight:800; margin-bottom:20px; box-shadow:0 4px 15px var(--shadow); }
+
+        /* Menu Grid */
+        .menu-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; max-width:400px; width:100%; }
+        .menu-card { background:white; padding:20px; border-radius:20px; text-align:center; cursor:pointer; transition:0.3s; box-shadow:0 5px 15px var(--shadow); border:2px solid transparent; }
+        .menu-card:hover { transform:translateY(-5px); border-color:var(--green-light); }
+        .menu-card.wide { grid-column: span 2; background:var(--orange); color:white; }
+
+        /* Shop Styles */
+        .shop-container { display:grid; grid-template-columns:1fr; gap:15px; width:100%; max-width:400px; }
+        .shop-item { background:white; padding:15px; border-radius:15px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 10px var(--shadow); }
+        .shop-info h4 { color:var(--green-dark); font-size:1.2rem; }
+        .shop-info p { font-size:0.8rem; color:#666; }
+        .buy-btn { background:var(--green); color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:900; cursor:pointer; transition:0.2s; }
+        .buy-btn:disabled { background:#ccc; cursor:not-allowed; }
+
+        /* Quiz & Cards */
+        .card-wrap { background:white; padding:30px; border-radius:25px; width:100%; max-width:450px; box-shadow:0 15px 40px rgba(0,0,0,0.1); text-align:center; }
+        .opt-btn { width:100%; padding:12px; margin:8px 0; border:2px solid #eee; border-radius:12px; background:none; font-family:inherit; font-weight:700; cursor:pointer; transition:0.2s; }
+        .opt-btn:hover { background:var(--bg); border-color:var(--green-light); }
+        
+        #qrcode { background:white; padding:15px; border-radius:15px; display:inline-block; margin-top:15px; }
+
+    </style>
+</head>
+<body>
+
+<div class="bg-fruits" id="bgFruits"></div>
+
+<div class="screen active" id="home">
+    <h1 style="font-size:3rem; color:var(--green-dark); text-align:center; line-height:1;">MiniFresh<br><span style="color:var(--orange)">ADVENTURE</span></h1>
+    <p style="margin:15px 0 25px; font-weight:700; color:var(--green)">Makan Buah, Kumpul Poin, Dapat Diskon!</p>
+    <button class="buy-btn" style="padding:15px 40px; border-radius:30px; font-size:1.2rem;" onclick="goTo('menu')">AYO MAIN!</button>
+</div>
+
+<div class="screen" id="menu">
+    <div class="points-bar">⭐ Poin Saya: <span id="display-points">0</span></div>
+    <div class="menu-grid">
+        <div class="menu-card" onclick="startQuiz()">
+            <div style="font-size:2.5rem">🧠</div>
+            <h4>Kuis Gizi</h4>
+        </div>
+        <div class="menu-card" onclick="alert('Game Memory Segera Hadir!')">
+            <div style="font-size:2.5rem">🃏</div>
+            <h4>Memory</h4>
+        </div>
+        <div class="menu-card wide" onclick="goTo('shop')">
+            <div style="font-size:1.5rem">🛒 TOKO DISKON</div>
+            <p>Tukarkan poinmu di sini!</p>
+        </div>
+    </div>
+</div>
+
+<div class="screen" id="shop">
+    <button class="back-btn" onclick="goTo('menu')">← Kembali</button>
+    <h2 style="margin-bottom:5px;">🛒 MiniFresh Shop</h2>
+    <p style="margin-bottom:20px; font-weight:bold; color:var(--orange)">Poin Anda: <span id="shop-points">0</span></p>
+    
+    <div class="shop-container">
+        <div class="shop-item">
+            <div class="shop-info">
+                <h4>Diskon 5%</h4>
+                <p>Harga: 1.000 Poin</p>
+            </div>
+            <button class="buy-btn" id="btn-5" onclick="buyDiscount(5, 1000)">BELI</button>
+        </div>
+        <div class="shop-item">
+            <div class="shop-info">
+                <h4>Diskon 10%</h4>
+                <p>Harga: 2.500 Poin</p>
+            </div>
+            <button class="buy-btn" id="btn-10" onclick="buyDiscount(10, 2500)">BELI</button>
+        </div>
+        <div class="shop-item">
+            <div class="shop-info">
+                <h4>Diskon 15%</h4>
+                <p>Harga: 5.000 Poin</p>
+            </div>
+            <button class="buy-btn" id="btn-15" onclick="buyDiscount(15, 5000)">BELI</button>
+        </div>
+        <div class="shop-item">
+            <div class="shop-info">
+                <h4>Diskon 25% 🏆</h4>
+                <p>Harga: 10.000 Poin</p>
+            </div>
+            <button class="buy-btn" id="btn-25" onclick="buyDiscount(25, 10000)">BELI</button>
+        </div>
+    </div>
+</div>
+
+<div class="screen" id="quiz">
+    <div class="card-wrap">
+        <h3 id="q-text">Pertanyaan...</h3>
+        <div id="q-options" style="margin-top:20px;"></div>
+    </div>
+</div>
+
+<div class="screen" id="claim">
+    <div class="card-wrap">
+        <h2>🎉 Pembelian Berhasil!</h2>
+        <p>Tunjukkan QR ini ke kasir untuk diskon <span id="claimed-amount">0</span>%</p>
+        <div id="qrcode"></div>
+        <br>
+        <button class="buy-btn" style="margin-top:20px; background:var(--orange)" onclick="goTo('menu')">Kembali ke Menu</button>
+    </div>
+</div>
+
+<script>
+    // DATA STATE
+    let points = parseInt(localStorage.getItem('mf_points')) || 0;
+    const questions = [
+        { q: "Apa manfaat utama serat dalam Nata de Coco?", a: ["Bikin ngantuk", "Melancarkan pencernaan", "Menguatkan kuku"], c: 1 },
+        { q: "Semangka mengandung 92% apa?", a: ["Susu", "Sirup", "Air"], c: 2 },
+        { q: "Buah yang membantu enzim pencernaan protein adalah...", a: ["Pepaya", "Durian", "Salak"], c: 0 }
+    ];
+    let currentQ = 0;
+
+    // INITIALIZE BG
+    (function createBg() {
+        const bg = document.getElementById('bgFruits');
+        const fruits = ['🍉','🍊','🍈','🍌','🍓'];
+        for(let i=0; i<15; i++) {
+            let d = document.createElement('div');
+            d.className = 'bg-fruit';
+            d.textContent = fruits[Math.floor(Math.random()*5)];
+            d.style.left = Math.random()*100 + 'vw';
+            d.style.animationDuration = (6 + Math.random()*10) + 's';
+            d.style.animationDelay = Math.random()*5 + 's';
+            bg.appendChild(d);
+        }
+    })();
+
+    // NAVIGATION
+    function goTo(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('display-points').textContent = points;
+        document.getElementById('shop-points').textContent = points;
+        localStorage.setItem('mf_points', points);
+
+        // Update Button State di Shop
+        checkShopButton('btn-5', 1000);
+        checkShopButton('btn-10', 2500);
+        checkShopButton('btn-15', 5000);
+        checkShopButton('btn-25', 10000);
+    }
+
+    function checkShopButton(id, price) {
+        const btn = document.getElementById(id);
+        if(btn) btn.disabled = points < price;
+    }
+
+    // GAMEPLAY
+    function startQuiz() {
+        currentQ = 0;
+        goTo('quiz');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = questions[currentQ];
+        document.getElementById('q-text').textContent = q.q;
+        const optCont = document.getElementById('q-options');
+        optCont.innerHTML = "";
+        
+        q.a.forEach((txt, i) => {
+            let b = document.createElement('button');
+            b.className = 'opt-btn';
+            b.textContent = txt;
+            b.onclick = () => {
+                if(i === q.c) {
+                    points += 50; // Optimalisasi: Poin dikurangi sedikit agar tidak terlalu cepat kaya
+                    alert("Benar! +50 Poin");
+                } else {
+                    alert("Kurang tepat!");
+                }
+                currentQ++;
+                if(currentQ < questions.length) renderQuestion();
+                else goTo('menu');
+            };
+            optCont.appendChild(b);
+        });
+    }
+
+    // SHOP LOGIC
+    function buyDiscount(percent, price) {
+        if(points >= price) {
+            if(confirm(`Tukarkan ${price} poin untuk diskon ${percent}%?`)) {
+                points -= price;
+                document.getElementById('claimed-amount').textContent = percent;
+                
+                // Generate QR
+                const qrDiv = document.getElementById('qrcode');
+                qrDiv.innerHTML = "";
+                new QRCode(qrDiv, {
+                    text: `DISC${percent}_REF${Math.floor(Math.random()*9999)}`,
+                    width: 150,
+                    height: 150
+                });
+                
+                goTo('claim');
+            }
+        } else {
+            alert("Poin kamu belum cukup!");
+        }
+    }
+
+    updateUI();
+</script>
+</body>
+</html>
